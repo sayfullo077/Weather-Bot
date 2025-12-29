@@ -52,9 +52,6 @@ async def start_command(message: types.Message, state: FSMContext, session: Asyn
     lang_code = message.from_user.language_code if message.from_user.language_code else 'Unknown'
     user = await select_user(telegram_id, session)
     full_name = html_escape(message.from_user.full_name)
-    lat = user.lat
-    lon = user.lon
-    address = user.address
     subscribed = await is_user_subscribed(telegram_id)
     check_member_btn = await check_member_button(CHANNEL_USERNAME)
     if not user:
@@ -68,7 +65,9 @@ async def start_command(message: types.Message, state: FSMContext, session: Asyn
         except Exception as e:
             for admin in ADMINS:
                 await bot.send_message(chat_id=admin, text=f"Error while creating new user: {e}")
-
+    lat = user.lat
+    lon = user.lon
+    address = user.address
     # if not subscribed:
     #     # Obuna bo'lmagan foydalanuvchi uchun
     #     await message.answer(f"👋 Hello {full_name}!\n\nTo use the Essay Checker Bot, you must subscribe to our "
