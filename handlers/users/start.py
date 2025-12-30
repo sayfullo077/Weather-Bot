@@ -57,7 +57,7 @@ async def start_command(message: types.Message, state: FSMContext, session: Asyn
     if not user:
         try:
             user_profile_btn = await user_profile_button(telegram_id)
-            await bot.send_message(chat_id=-1003134144759, text=f"New 👤: {full_name}\nUsername📩: {f'@{username}' if username else 'None'}\nTelegram 🆔: {telegram_id}\nReg 📆: {registration_date}\nPremium🤑: {is_premium}\nLang: {lang_code}",
+            await bot.send_message(chat_id=-1003526775438, text=f"New 👤: {full_name}\nUsername📩: {f'@{username}' if username else 'None'}\nTelegram 🆔: {telegram_id}\nReg 📆: {registration_date}\nPremium🤑: {is_premium}\nLang: {lang_code}",
                                        reply_markup=user_profile_btn)
             await message.answer(f"👋 Hello {full_name}!\nWelcome to the weather bot 🌦\n\n"
                                  f"⚠️ To fully use the bot, please submit your location first",
