@@ -65,59 +65,61 @@ async def start_command(message: types.Message, state: FSMContext, session: Asyn
         except Exception as e:
             for admin in ADMINS:
                 await bot.send_message(chat_id=admin, text=f"Error while creating new user: {e}")
-    lat = user.lat
-    lon = user.lon
-    address = user.address
-    # if not subscribed:
-    #     # Obuna bo'lmagan foydalanuvchi uchun
-    #     await message.answer(f"👋 Hello {full_name}!\n\nTo use the Essay Checker Bot, you must subscribe to our "
-    #                          f"main channel first.", reply_markup=check_member_btn)
-    #     return
-
-    weather_data = await get_weather_from_redis(lat, lon)
-    refresh_weather_btn = await refresh_button()
-
-    if weather_data:
-        print("Weather from redis cache 2 >>>>>")
-        await message.answer(weather_data, parse_mode="Markdown", reply_markup=refresh_weather_btn)
 
     else:
-        weather = await fetch_weather(lat, lon)
+        lat = user.lat
+        lon = user.lon
+        address = user.address
+        # if not subscribed:
+        #     # Obuna bo'lmagan foydalanuvchi uchun
+        #     await message.answer(f"👋 Hello {full_name}!\n\nTo use the Essay Checker Bot, you must subscribe to our "
+        #                          f"main channel first.", reply_markup=check_member_btn)
+        #     return
 
-        # 🔹 Qisqa summary (AI uchun)
-        base_text = (
-            f"{get_weather_emoji(weather['current']['condition']['text'])} "
-            f"{weather['current']['condition']['text']}, "
-            f"{weather['current']['temp_c']}°C, "
-            f"feels like {weather['current']['feelslike_c']}°C, "
-            f"wind {weather['current']['wind_kph']} kph, "
-            f"humidity {weather['current']['humidity']}%"
-        )
+        weather_data = await get_weather_from_redis(lat, lon)
+        refresh_weather_btn = await refresh_button()
 
-        # 🔹 AI analiz, faqat tavsiyalar va izoh
-        ai_prompt = (
-            f"{AI_WEATHER_ANALYST_PROMPT}\n"
-            f"User location: {address}\n"
-            f"Weather summary: {base_text}\n"
-            f"Do NOT repeat numbers or raw data, give only practical advice!"
-        )
-        ai_text = await ask_ai_deepseek(base_text, ai_prompt)
+        if weather_data:
+            print("Weather from redis cache 2 >>>>>")
+            await message.answer(weather_data, parse_mode="Markdown", reply_markup=refresh_weather_btn)
 
-        await decrement_prompt(telegram_id)
+        else:
+            weather = await fetch_weather(lat, lon)
 
-        # 🔹 Foydalanuvchiga javob
-        text_to_send = (
-            f"📍 {address}\n"
-            f"🌡 {weather['current']['temp_c']}°C, feels like {weather['current']['feelslike_c']}°C\n"
-            f"☁ {weather['current']['condition']['text']}\n"
-            f"💨 Wind: {weather['current']['wind_kph']} kph\n"
-            f"💧 Humidity: {weather['current']['humidity']}%\n\n"
-            f"🤖 AI Analysis:\n{ai_text}"
-        )
-        key = f"weather:{round(lat, 3)}:{round(lon, 3)}"
-        await redis.setex(key, CACHE_EXPIRE, json.dumps(text_to_send))
+            # 🔹 Qisqa summary (AI uchun)
+            base_text = (
+                f"{get_weather_emoji(weather['current']['condition']['text'])} "
+                f"{weather['current']['condition']['text']}, "
+                f"{weather['current']['temp_c']}°C, "
+                f"feels like {weather['current']['feelslike_c']}°C, "
+                f"wind {weather['current']['wind_kph']} kph, "
+                f"humidity {weather['current']['humidity']}%"
+            )
 
-        await message.answer(text_to_send, parse_mode="Markdown", reply_markup=refresh_weather_btn)
+            # 🔹 AI analiz, faqat tavsiyalar va izoh
+            ai_prompt = (
+                f"{AI_WEATHER_ANALYST_PROMPT}\n"
+                f"User location: {address}\n"
+                f"Weather summary: {base_text}\n"
+                f"Do NOT repeat numbers or raw data, give only practical advice!"
+            )
+            ai_text = await ask_ai_deepseek(base_text, ai_prompt)
+
+            await decrement_prompt(telegram_id)
+
+            # 🔹 Foydalanuvchiga javob
+            text_to_send = (
+                f"📍 {address}\n"
+                f"🌡 {weather['current']['temp_c']}°C, feels like {weather['current']['feelslike_c']}°C\n"
+                f"☁ {weather['current']['condition']['text']}\n"
+                f"💨 Wind: {weather['current']['wind_kph']} kph\n"
+                f"💧 Humidity: {weather['current']['humidity']}%\n\n"
+                f"🤖 AI Analysis:\n{ai_text}"
+            )
+            key = f"weather:{round(lat, 3)}:{round(lon, 3)}"
+            await redis.setex(key, CACHE_EXPIRE, json.dumps(text_to_send))
+
+            await message.answer(text_to_send, parse_mode="Markdown", reply_markup=refresh_weather_btn)
     await state.set_state(UserStart.menu)
 
 
